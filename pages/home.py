@@ -6,6 +6,7 @@ Berisi: Hero section, 3 Fitur Unggulan, CTA, dan Cara Kerja.
 """
 
 import streamlit as st
+from utils.logo import LOGO_B64
 
 
 def render():
@@ -148,10 +149,12 @@ def render():
     st.markdown("<div style='height:3rem'></div>", unsafe_allow_html=True)
 
     # ── FOOTER INFO ────────────────────────────────────────────────
-    st.markdown("""
+    st.markdown(f"""
     <div style="text-align:center;padding:2rem 0 1rem;border-top:1px solid var(--border)">
         <p style="color:var(--text-muted);font-size:.8rem;margin:0">
-            🏠 <strong>KosKu UNESA</strong> — Sistem Rekomendasi Kos Berbasis K-Means &amp; MOORA<br>
+            <img src="{LOGO_B64}" width="20"
+                 style="vertical-align:middle;margin-right:6px;margin-bottom:3px">
+            <strong>KosKu UNESA</strong> — Sistem Rekomendasi Kos Berbasis K-Means &amp; MOORA<br>
             Dikembangkan sebagai Tugas Akhir · Universitas Negeri Surabaya
         </p>
     </div>

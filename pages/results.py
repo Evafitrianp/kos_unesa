@@ -14,7 +14,7 @@ import base64
 import streamlit as st
 import io
 from PIL import Image
-from utils.dummy_data import format_harga, format_jarak
+from utils.algoritma import format_harga, format_jarak
 
 
 # ─────────────────────────────────────────────────────────────
@@ -119,24 +119,23 @@ def _render_kos_card(kos: dict, rank: int):
                         align-items:center;margin:4px 0 6px">
                 <span style="
                     background:{rank_bg};color:#fff;
-                    font-size:.75rem;font-weight:800;
+                    font-size:.8rem;font-weight:800;
                     padding:.2rem .65rem;border-radius:99px;
                     font-family:'Sora',sans-serif">
                     # {rank}
                 </span>
-                <span style="background:#F0FDF4;color:#fff;
-                    font-size:.72rem;font-weight:600;
+                <span style="background:#DCCCAC;color:#333333;
+                    font-size:.8rem;font-weight:600;
                     padding:.2rem .6rem;border-radius:99px;
                     font-family:'Sora',sans-serif">
                     {daerah}
                 </span>
                 <span style="
                     background:{jenis_color};color:#fff;
-                    font-size:.72rem;font-weight:600;
+                    font-size:.8rem;font-weight:600;
                     padding:.2rem .6rem;border-radius:99px">
                     {jenis}
-                </span>
-            </div>
+                </span></div>
             """,
             unsafe_allow_html=True,
         )
@@ -146,7 +145,7 @@ def _render_kos_card(kos: dict, rank: int):
             f"""
             <span style="
                 background:{badge_bg};color:{badge_color};
-                font-size:.72rem;font-weight:700;
+                font-size:.8rem;font-weight:700;
                 padding:.22rem .8rem;border-radius:99px;
                 letter-spacing:.03em;text-transform:uppercase;
                 display:inline-block;margin-bottom:6px">
@@ -156,75 +155,62 @@ def _render_kos_card(kos: dict, rank: int):
             unsafe_allow_html=True,
         )
 
-        # 3. NAMA & ALAMAT
+        # 3. NAMA & HARGA
         st.markdown(
             f"""
-            <div style="font-family:'Sora',sans-serif;font-size:.95rem;
-                        font-weight:700;color:#111827;margin-bottom:2px">
-                {nama}
+            <div style="display:flex;justify-content:space-between;
+                        align-items:baseline;gap:6px;margin-bottom:3px">
+                <div style="font-family:Sora,sans-serif;font-size:1.25rem;font-weight:700;color:#111827;flex:1;min-width:0;
+                            overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+                             {nama}</div>
+                <div style="font-family:Sora,sans-serif;font-size:1.25rem;font-weight:800;color:#047857;white-space:nowrap">
+                    {harga_str}
+                    <span style="font-size:.65rem;color:#9CA3AF;font-weight:400">/bln</span>
+                </div>
             </div>
-            <div style="font-size:.78rem;color:#9CA3AF;margin-bottom:8px">
-                <img src="https://cdn-icons-png.flaticon.com/512/535/535188.png" width="22" style="border-radius:50%;background:#E5E7EB;padding:3px">
+            """,
+            unsafe_allow_html=True,
+        )
+        # 4. ALAMAT
+        st.markdown(
+            f"""
+            <div style="font-size:.9rem;color:#9CA3AF;margin-top:6px;margin-bottom:8px">
+                <img src="https://cdn-icons-png.flaticon.com/512/535/535188.png" 
+                width="22" style="border-radius:50%;background:#E5E7EB;padding:3px">
                  {alamat}
             </div>
             """,
             unsafe_allow_html=True,
         )
 
-        # 4. HARGA & JARAK & UKURAN
+        # 4. JARAK & UKURAN
         st.markdown(
             f"""
-            <div style="font-size:.85rem;color:#4B5563;line-height:1.9">
-                <img src="https://cdn-icons-png.flaticon.com/512/631/631180.png"
-                    width="22" style="border-radius:50%;background:#E5E7EB;padding:3px">
-                    <span style="font-family:'Sora',sans-serif;font-weight:700;
-                                color:#047857"> {harga_str}</span>
-                   <span style="color:#9CA3AF;font-size:.75rem">/bln</span><br>
-                <img src="https://cdn-icons-png.flaticon.com/512/484/484141.png" 
-                    width="22" style="border-radius:50%;background:#E5E7EB;padding:3px"> {jarak_str}<br>
-                <img src="https://cdn-icons-png.flaticon.com/512/8112/8112972.png" 
-                    width="22" style="border-radius:50%;background:#E5E7EB;padding:3px">{ukuran}
+            <div style="display:flex;gap:30px;font-size:.9rem;justify-content:flex-start;
+                        color:#4B5563;margin-bottom:8px;align-items:center">
+                <span style="display:flex;align-items:center;gap:3px">
+                    <img src="https://cdn-icons-png.flaticon.com/512/484/484141.png" 
+                    width="22" style="border-radius:50%;background:#E5E7EB;padding:3px"> {jarak_str}</span>
+                <span style="display:flex;align-items:center;gap:3px">
+                    <img src="https://cdn-icons-png.flaticon.com/512/8112/8112972.png" 
+                    width="13" style="border-radius:50%;background:#F3F4F6;padding:2px"> {ukuran}</span>
             </div>
             """,
             unsafe_allow_html=True,
         )
-
-        st.markdown("<hr style='margin:8px 0;border-color:#E5E7EB'>",
-                    unsafe_allow_html=True)
-
-        # 5. SKOR MOORA (gunakan st.progress — 100% native, pasti render)
-        st.markdown(
-            f"<div style='display:flex;justify-content:space-between;"
-            f"font-size:.78rem;color:#4B5563;margin-bottom:3px'>"
-            f"<span><img src='https://cdn-icons-png.flaticon.com/512/3558/3558884.png' width='16' style='vertical-align:middle;margin-right:4px'>Skor MOORA</span>"
-            f"<strong>{moora_val:.3f}</strong></div>",
-            unsafe_allow_html=True,
-        )
-        st.progress(float(moora_val))
-
-        # 6. KESESUAIAN KRITERIA
-        st.markdown(
-            f"<div style='display:flex;justify-content:space-between;"
-            f"font-size:.78rem;color:#4B5563;margin:6px 0 3px'>"
-            f"<span><img src='https://cdn-icons-png.flaticon.com/512/845/845646.png' width='16' style='vertical-align:middle;margin-right:4px'>Kesesuaian</span>"
-            f"<strong>{kesesuaian}%</strong></div>",
-            unsafe_allow_html=True,
-        )
-        st.progress(kesesuaian / 100)
-
-        # 7. FASILITAS TAG (max 4 + sisa)
+        # 5. FASILITAS
         if fas_tampil:
             fas_spans = "".join(
                 f'<span style="background:#F0FDF4;color:#047857;'
                 f'border:1px solid #BBF7D0;padding:.15rem .5rem;'
-                f'border-radius:99px;font-size:.7rem;white-space:nowrap">'
+                f'border-radius:99px;font-size:.8rem;white-space:nowrap">'
                 f'{f}</span>'
                 for f in fas_tampil
             )
             if fas_sisa > 0:
                 fas_spans += (
                     f'<span style="background:#F3F4F6;color:#9CA3AF;'
-                    f'padding:.15rem .5rem;border-radius:99px;font-size:.7rem">'
+                    f'padding:.15rem .5rem;border-radius:99px;font-size:.8rem">'
                     f'+{fas_sisa}</span>'
                 )
             st.markdown(
@@ -232,11 +218,36 @@ def _render_kos_card(kos: dict, rank: int):
                 f'{fas_spans}</div>',
                 unsafe_allow_html=True,
             )
+        
+
+        st.markdown("<hr style='margin:8px 0;border-color:#E5E7EB'>",
+                    unsafe_allow_html=True)
+
+        # 6. SKOR MOORA & KESESUAIAN
+        col_moora, col_kes = st.columns(2, gap="small")
+        with col_moora:
+            st.markdown(
+                f"<div style='display:flex;justify-content:space-between;"
+                f"font-size:.8rem;color:#4B5563;margin-bottom:3px'>"
+                f"<span><img src='https://cdn-icons-png.flaticon.com/512/3558/3558884.png' width='16' style='vertical-align:middle;margin-right:4px'>Skor MOORA</span>"
+                f"<strong>{moora_val:.3f}</strong></div>",
+                unsafe_allow_html=True,
+            )
+            st.progress(float(moora_val))
+
+        # 6. KESESUAIAN KRITERIA
+        with col_kes:
+            st.markdown(
+                f"<div style='display:flex;justify-content:space-between;"
+                f"font-size:.8rem;color:#4B5563;margin-bottom:3px'>"
+                f"<span><img src='https://cdn-icons-png.flaticon.com/512/845/845646.png' width='16' style='vertical-align:middle;margin-right:4px'>Kesesuaian</span>"
+                f"<strong>{kesesuaian}%</strong></div>",
+                unsafe_allow_html=True,
+            )
+            st.progress(kesesuaian / 100)
 
 
-# ─────────────────────────────────────────────────────────────
-#  RINGKASAN PENCARIAN
-# ─────────────────────────────────────────────────────────────
+# RINGKASAN PENCARIAN
 
 def _render_ringkasan(params: dict):
     if not params:
@@ -255,7 +266,7 @@ def _render_ringkasan(params: dict):
             background:#FFFFFF;border:1px solid #E5E7EB;
             border-radius:12px;padding:14px 18px;
             margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,.07)">
-            <div style="font-size:.72rem;font-weight:700;color:#9CA3AF;
+            <div style="font-size:.9rem;font-weight:700;color:#9CA3AF;
                         text-transform:uppercase;letter-spacing:.07em;margin-bottom:7px">
                 Ringkasan Pencarian
             </div>
@@ -303,7 +314,7 @@ def render():
             <div style="display:flex;justify-content:space-between;
                         flex-wrap:wrap;gap:50px;align-items:flex-start;width:100%">
                 <div>
-                    <span style="background:#D1FAE5;color:#065F46;font-size:.72rem;
+                    <span style="background:#D1FAE5;color:#065F46;font-size:.8rem;
                                  font-weight:700;padding:.22rem .75rem;border-radius:99px;
                                  letter-spacing:.06em;text-transform:uppercase">
                         Hasil Rekomendasi
@@ -343,7 +354,7 @@ def render():
             key="filter_daerah",)
     with col_back:
         st.markdown("<div style='height:1.6rem'></div>", unsafe_allow_html=True)
-        if st.button("← Cari Ulang", key="btn_back_search", use_container_width=True):
+        if st.button("Cari Ulang", key="btn_back_search", use_container_width=True):
             st.session_state.current_page = "search"
             st.rerun()
 
@@ -354,8 +365,8 @@ def render():
     
     st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
 
-    # ── GRID 3 KOLOM ─────────────────────────────────────────
-    cols_per_row = 3
+    # ── GRID 2 KOLOM ─────────────────────────────────────────
+    cols_per_row = 2
     for i in range(0, len(kos_tampil), cols_per_row):
         row_kos = kos_tampil[i: i + cols_per_row]
         grid    = st.columns(len(row_kos), gap="medium")

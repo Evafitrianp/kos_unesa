@@ -32,7 +32,7 @@ def render():
                     <span><strong>Email:</strong> admin@kosku-unesa.ac.id</span></div>
                 <div style="display: flex; align-items: center; gap: 15px;">
                     <img src="https://cdn-icons-png.flaticon.com/512/455/455705.png" width="35" height="35" style="object-fit: contain; border-radius: 50%; border: 2px solid #111827; padding: 6px;">
-                    <span><strong>WhatsApp:</strong> +62 812-3456-7890</span></div>
+                    <span><strong>WhatsApp:</strong> +62 813-3571-5350</span></div>
                 <div style="display: flex; align-items: center; gap: 15px;">
                     <img src="https://cdn-icons-png.flaticon.com/512/484/484167.png" width="35" height="35" style="object-fit: contain; border-radius: 50%; border: 2px solid #111827; padding: 6px;">
                     <span><strong>Lokasi:</strong> Kampus UNESA Ketintang, Surabaya</span></div>
@@ -54,33 +54,32 @@ def render():
                     </summary>
                     <p style="color:var(--text-secondary);font-size:.9rem;
                               margin-top:.75rem;line-height:1.6">
-                        Navigasi ke halaman "Cari Kos", isi kriteria pencarian Anda (budget, jarak, fasilitas, dll), 
-                        kemudian klik tombol "Cari Kos Rekomendasi". Sistem akan menampilkan hasil kos terbaik yang sesuai.</p>
+                        Pengguna cukup mengisi kriteria seperti budget, jarak, fasilitas, ukuran kamar, 
+                        dan jenis kos. Setelah itu, sistem akan menampilkan rekomendasi kos yang paling sesuai.</p>
                 </details></div>
             <div style="margin-bottom:1rem">
                 <details style="cursor:pointer">
                     <summary style="font-weight:600;color:var(--text-primary);
                                    padding:.5rem;background:var(--bg);border-radius:var(--radius-xs);
                                    margin-bottom:.5rem">
-                        Apakah data kos selalu update?
+                        Apakah hasil rekomendasi bisa disesuaikan?
                     </summary>
                     <p style="color:var(--text-secondary);font-size:.9rem;
                               margin-top:.75rem;line-height:1.6">
-                        Data kos diperbarui secara berkala. Untuk informasi terkini tentang ketersediaan dan harga, 
-                        kami merekomendasikan untuk menghubungi pemilik kos langsung melalui WhatsApp.
-                    </p>
+                        Ya, hasil rekomendasi akan menyesuaikan dengan kriteria yang Anda masukkan. 
+                        Semakin spesifik preferensi yang diberikan, semakin relevan hasil yang ditampilkan.</p>
                 </details></div>
-            <div style="margin-bottom:0">
+            <div style="margin-bottom:1rem">
                 <details style="cursor:pointer">
                     <summary style="font-weight:600;color:var(--text-primary);
                                    padding:.5rem;background:var(--bg);border-radius:var(--radius-xs);
                                    margin-bottom:.5rem">
-                        Bagaimana cara melaporkan data tidak akurat?
+                        Apakah platform ini membantu dalam proses pemesanan kos?
                     </summary>
                     <p style="color:var(--text-secondary);font-size:.9rem;
                               margin-top:.75rem;line-height:1.6">
-                        Jika menemukan data yang tidak akurat, silakan hubungi kami melalui email atau WhatsApp 
-                        dengan menyertakan detail kos yang bermasalah. Tim kami akan segera melakukan verifikasi dan perbaikan.</p>
+                        Platform ini membantu dalam menemukan kos yang sesuai, 
+                        sedangkan proses pemesanan dilakukan secara langsung dengan pemilik kos melalui kontak yang tersedia.</p>
                 </details></div>
         </div>
         """, unsafe_allow_html=True)

@@ -13,7 +13,7 @@ import streamlit as st
 import io
 import urllib.parse
 from PIL import Image
-from utils.dummy_data import format_harga, format_jarak
+from utils.algoritma import format_harga, format_jarak
 
 
 # ─────────────────────────────────────────────────────────────

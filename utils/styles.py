@@ -391,7 +391,6 @@ def inject_global_styles():
     .hero-subtitle {
         font-size: 1.1rem;
         color: rgba(255,255,255,.85);
-        max-width: 560px;
         margin: 0 auto 2.5rem;
         line-height: 1.7;
     }

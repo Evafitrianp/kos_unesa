@@ -504,7 +504,7 @@ def _buat_deskripsi(row: pd.Series) -> str:
         f"{jarak_m} meter dari Kampus UNESA Ketintang. "
         f"Tersedia dengan harga {harga}/bulan dan dilengkapi fasilitas: {fas_str}. "
         f"Ukuran kamar {row['UK 1']:.1f}×{row['UK 2']:.1f} m "
-        f"({row['Ukuran Kamar (M2)']:.1f} m²).{tambahan}."
+        f"({row['Ukuran Kamar (M2)']:.1f} m²).{tambahan}"
     )
 
 
@@ -678,3 +678,15 @@ def cari_rekomendasi(
     )
 
     return hasil_list, mode_filter
+
+
+def format_harga(harga: int) -> str:
+    """Format angka harga menjadi string Rupiah yang rapi."""
+    return f"Rp {harga:,.0f}".replace(",", ".")
+
+
+def format_jarak(jarak_km: float) -> str:
+    """Format jarak dalam meter atau km."""
+    if jarak_km < 1:
+        return f"{int(jarak_km * 1000)} m dari kampus"
+    return f"{jarak_km:.1f} km dari kampus"

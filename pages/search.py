@@ -120,42 +120,17 @@ def render():
             "Listrik",
         ]
 
-        # ── Grid toggle button 4 kolom ─────────────────────────────
+        # ── Grid toggle button 5 kolom ─────────────────────────────
         cols = st.columns(4, gap="small")
         for idx, fas in enumerate(FASILITAS_OPTIONS):
             col_idx = idx % 4
             with cols[col_idx]:
                 is_active = fas in st.session_state.fas_dipilih
-                # Styling untuk active/inactive button
-                btn_style = """
-                style="
-                    width: 100%;
-                    padding: 0.75rem 0.5rem;
-                    border-radius: 0.5rem;
-                    font-size: 0.875rem;
-                    font-weight: 600;
-                    cursor: pointer;
-                    border: 2px solid;
-                    transition: all 0.2s ease;
-                    text-align: center;
-                    font-family: 'Sora', sans-serif;
-                """ if is_active else """
-                style="
-                    width: 100%;
-                    padding: 0.75rem 0.5rem;
-                    border-radius: 0.5rem;
-                    font-size: 0.875rem;
-                    font-weight: 600;
-                    cursor: pointer;
-                    border: 2px solid;
-                    transition: all 0.2s ease;
-                    text-align: center;
-                    font-family: 'Sora', sans-serif;
-                """
                 
                 if st.button(
-                    f"{'✓ ' if is_active else ''}{fas}",
+                    fas,
                     key=f"btn_fas_{fas}",
+                    type="primary" if is_active else "secondary",
                     use_container_width=True,
                 ):
                     if fas in st.session_state.fas_dipilih:
@@ -199,6 +174,7 @@ def render():
                 "Ukuran Kamar Minimum",
                 options=[
                     "Semua Ukuran",
+                    "2x3 m (Kecil)",
                     "3x3 m (Standar Kecil)",
                     "3x4 m (Standar)",
                     "4x4 m (Luas)",
