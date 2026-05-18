@@ -1,9 +1,5 @@
 import streamlit as st
 
-# ─────────────────────────────────────────────
-#  GLOBAL CSS — disuntikkan sekali di app.py
-# ─────────────────────────────────────────────
-
 def inject_global_styles():
     st.markdown("""
     <style>

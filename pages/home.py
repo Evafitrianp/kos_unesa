@@ -1,10 +1,3 @@
-"""
-pages/home.py
-─────────────
-Halaman Beranda (Landing Page).
-Berisi: Hero section, 3 Fitur Unggulan, CTA, dan Cara Kerja.
-"""
-
 import streamlit as st
 from utils.logo import LOGO_B64
 

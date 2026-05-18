@@ -1,14 +1,3 @@
-"""
-pages/results.py
-────────────────────────────────────────────────────────────────
-Halaman Hasil Rekomendasi — K-Means + MOORA.
-
-FIX utama bug HTML mentah:
-  Gunakan st.container(border=True) + st.image() + st.progress()
-  sebagai struktur card. st.markdown() HANYA untuk snippet HTML
-  kecil dengan inline-style, BUKAN satu blok besar.
-"""
-
 import os
 import base64
 import streamlit as st
@@ -17,9 +6,6 @@ from PIL import Image
 from utils.algoritma import format_harga, format_jarak
 
 
-# ─────────────────────────────────────────────────────────────
-#  HELPER: foto dari folder lokal atau placeholder abu-abu
-# ─────────────────────────────────────────────────────────────
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 def _foto_src(kos: dict) -> str | None:
@@ -70,9 +56,6 @@ def _tampil_foto(kos: dict, height: int = 190):
         )
 
 
-# ─────────────────────────────────────────────────────────────
-#  RENDER SATU CARD KOS
-# ─────────────────────────────────────────────────────────────
 
 def _render_kos_card(kos: dict, rank: int):
     """
@@ -283,9 +266,6 @@ def _render_ringkasan(params: dict):
         unsafe_allow_html=True,
     )
 
-# ─────────────────────────────────────────────────────────────
-#  RENDER UTAMA
-# ─────────────────────────────────────────────────────────────
 
 def render():
     kos_list    = st.session_state.get("search_results") or []

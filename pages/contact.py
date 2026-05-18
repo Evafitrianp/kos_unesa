@@ -1,9 +1,3 @@
-"""
-pages/contact.py
-────────────────
-Halaman Contact — Informasi kontak dan cara menghubungi tim KosKu UNESA.
-"""
-
 import streamlit as st
 
 

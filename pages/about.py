@@ -1,9 +1,3 @@
-"""
-pages/about.py
-──────────────
-Halaman About — Informasi tentang platform KosKu UNESA.
-"""
-
 import streamlit as st
 
 

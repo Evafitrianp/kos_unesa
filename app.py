@@ -1,24 +1,3 @@
-"""
-app.py — Entry Point
-════════════════════
-Sistem Rekomendasi Kos UNESA Ketintang
-Berbasis Algoritma K-Means & MOORA
-
-Jalankan dengan:
-    streamlit run app.py
-
-Struktur Proyek:
-    app.py
-    ├── utils/
-    │   ├── styles.py       ← Global CSS & design tokens
-    │   └── dummy_data.py   ← Data dummy kos (ganti dengan data asli)
-    └── pages/
-        ├── home.py         ← Halaman Beranda (landing page)
-        ├── search.py       ← Halaman Cari Kos (form 5 kriteria)
-        ├── results.py      ← Halaman Hasil Rekomendasi (card grid)
-        └── detail.py       ← Halaman Detail Kos (info lengkap + WA)
-"""
-
 import streamlit as st
 from utils.logo import LOGO_B64
 

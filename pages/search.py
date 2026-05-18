@@ -1,11 +1,3 @@
-"""
-pages/search.py
-───────────────
-Halaman Cari Kos — Formulir 5 Kriteria.
-Logika algoritma K-Means & MOORA akan diintegrasikan pada bagian
-yang ditandai dengan komentar # TODO.
-"""
-
 import time
 import streamlit as st
 from utils.algoritma import cari_rekomendasi
@@ -13,7 +5,7 @@ from utils.algoritma import cari_rekomendasi
 
 def render():
 
-    # ── SECTION HEADER ─────────────────────────────────────────────
+    # SECTION HEADER 
     st.markdown("""
     <span class="section-label">Pencarian Kos</span>
     <h2 class="section-title">Masukkan Kriteria Anda</h2>
@@ -24,10 +16,10 @@ def render():
     <div style="height:1.75rem"></div>
     """, unsafe_allow_html=True)
 
-    # ── FORM CARD ──────────────────────────────────────────────────
+    # FORM CARD 
     with st.container():
 
-        # ── ROW 1: Budget & Jarak ──────────────────────────────────
+        # ROW 1: Budget & Jarak 
         col_budget, col_jarak = st.columns(2, gap="large")
 
         with col_budget:
@@ -86,7 +78,7 @@ def render():
 
         st.markdown("<div style='height:1.5rem'></div>", unsafe_allow_html=True)
 
-        # ── ROW 2: Fasilitas ───────────────────────────────────────
+        # ROW 2: Fasilitas 
         st.markdown("""
         <div class="divider"></div>
         <h3 style="font-family:'Sora',sans-serif;font-size:1rem;font-weight:700;
@@ -100,7 +92,7 @@ def render():
         </p>
         """, unsafe_allow_html=True)
 
-        # ── Initialize state untuk fasilitas ───────────────────────
+        # Initialize state untuk fasilitas 
         if "fas_dipilih" not in st.session_state:
             st.session_state.fas_dipilih = ["WiFi"]
 
@@ -280,27 +272,16 @@ def render():
             """, unsafe_allow_html=True)
             time.sleep(0.3)
 
-        # ══════════════════════════════════════════════════════════
-        #  INTEGRASI ALGORITMA K-MEANS & MOORA
-        #  Memanggil utils/algoritma.py yang berisi:
-        #    Tahap 1 → Strict / Relaxed Filtering
-        #    Tahap 2 → K-Means Clustering (scikit-learn, k=3)
-        #    Tahap 3 → MOORA (Vector Normalization + Weighted Score)
-        #    Tahap 4 → Format list[dict] siap render
-        # ══════════════════════════════════════════════════════════
+
         try:
-            # ── Panggil fungsi utama algoritma ───────────────────
-            # Parameter dikirim persis dari nilai widget form di atas.
-            # `cari_rekomendasi` mengembalikan tuple:
-            #   hasil_kos  → list[dict], sudah diurutkan by skor MOORA
-            #   mode_filter → 'strict' atau 'relaxed'
+            # Panggil fungsi utama algoritma 
             hasil_kos, mode_filter = cari_rekomendasi(
                 budget           = budget,                        # int  : Rp dari slider
                 jarak_meter      = jarak,                          # int  : meter dari slider
                 fasilitas_dipilih= st.session_state.fas_dipilih,   # list : dari grid toggle button
                 ukuran_str       = ukuran,                         # str  : dari selectbox
                 jenis            = jenis,                          # str  : dari radio button
-                top_n            = 12,                             # int  : maks hasil ditampilkan
+                top_n            = 10,                             # int  : maks hasil ditampilkan
             )
 
             # ── Tangani kasus tidak ada hasil sama sekali ─────────
@@ -355,9 +336,7 @@ def render():
                 f"Silakan periksa konsol terminal untuk traceback lengkapnya."
             )
             st.stop()
-        # ══════════════════════════════════════════════════════════
-        #  END ALGORITMA
-        # ══════════════════════════════════════════════════════════
+
 
         # Navigasi ke halaman hasil
         st.session_state.current_page = "results"

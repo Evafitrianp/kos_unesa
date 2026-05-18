@@ -1,13 +1,3 @@
-"""
-pages/detail.py
-────────────────────────────────────────────────────────────────
-Halaman Detail Kos — layout 2 kolom, foto tunggal, tombol WA.
-
-FIX utama: semua elemen di-render dengan st.markdown() terpisah
-dan st.image() — TIDAK ada satu blok HTML besar yang menyebabkan
-bug "HTML mentah tampil sebagai teks".
-"""
-
 import os
 import streamlit as st
 import io
@@ -99,7 +89,7 @@ def render():
     # Tombol kembali + breadcrumb
     col_bk, col_bc = st.columns([2, 6])
     with col_bk:
-        if st.button("← Kembali ke Hasil", key="btn_back_results",
+        if st.button("Kembali ke Hasil", key="btn_back_results",
                      use_container_width=True):
             st.session_state.current_page = "results"
             st.rerun()

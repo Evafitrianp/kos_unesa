@@ -87,33 +87,19 @@ FOTO_POOL = [
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _load_dataset() -> pd.DataFrame:
-    """
-    Membaca data_kos.csv dan melakukan pembersihan awal:
-      1. Hapus spasi di nama kolom (ada 'Alamat ' dan 'Catatan ' dengan trailing space).
-      2. Konversi semua kolom fasilitas dari string 'Y'/'T' → integer 1/0
-         agar bisa dipakai dalam perhitungan numerik (K-Means & MOORA).
-      3. Bersihkan kolom 'Kontak (WA)': float NaN → string '0' sebagai fallback.
-    """
+
     # Baca CSV dari path yang sudah didefinisikan
     df = pd.read_csv(CSV_PATH)
 
-    # ── 1. Hapus trailing/leading spasi dari nama kolom ──────────────────
-    # Contoh: 'Alamat ' dan 'Catatan ' menjadi 'Alamat' dan 'Catatan'
+    # 1. Hapus spasi dari nama kolom
     df.columns = df.columns.str.strip()
-
-    # ── 2. Konversi kolom fasilitas 'Y'/'T' → 1/0 ───────────────────────
-    # Operasi ini mengubah tipe kolom dari object (string) ke integer
-    # sehingga bisa langsung dioperasikan secara matematis.
-    for kolom in KOLOM_FASILITAS:
-        df[kolom] = df[kolom].map({"Y": 1, "T": 0}).fillna(0).astype(int)
-
-    # ── 3. Bersihkan kolom Kontak WA ─────────────────────────────────────
-    # Kolom ini bertipe float64 karena ada NaN (10 baris kosong).
-    # Konversi: float 81330003818.0  →  string "6281330003818"
-    # Jika NaN, isi dengan string "0" (akan ditampilkan sebagai "Tidak tersedia")
+    # 2. Bersihkan kolom Kontak WA 
     df["Kontak (WA)"] = df["Kontak (WA)"].apply(
         lambda x: f"62{int(x)}" if pd.notna(x) else "0"
     )
+    # 3. Konversi kolom fasilitas 'Y'/'T' → 1/0 (string ke integer)
+    for kolom in KOLOM_FASILITAS:
+        df[kolom] = df[kolom].map({"Y": 1, "T": 0}).fillna(0).astype(int)
 
     return df
 
@@ -130,38 +116,18 @@ def _strict_filter(
     ukuran_min  : float,        # m² minimum dari pilihan dropdown UI
     jenis       : str,          # 'Putra' | 'Putri' | 'Campur'
 ) -> pd.DataFrame:
-    """
-    Strict Filtering — kecocokan 100% terhadap SEMUA kriteria user.
-
-    Logika filter (AND, semua kondisi harus terpenuhi):
-      a) Harga ≤ budget user
-      b) Jarak ≤ jarak_max_km user
-      c) Ukuran Kamar (M2) ≥ ukuran_min user
-      d) Jenis kos sesuai:
-         - user pilih 'Campur' → tampilkan SEMUA jenis
-         - user pilih 'Putra'/'Putri' → tampilkan jenis itu PLUS 'Campur'
-      e) Semua fasilitas yang dipilih user tersedia (nilai kolom = 1)
-    """
     hasil = df.copy()
-
-    # ── a. Filter Harga ───────────────────────────────────────────────────
+    # a. Filter Harga 
     hasil = hasil[hasil["Harga (Bulan)"] <= budget]
-
-    # ── b. Filter Jarak ───────────────────────────────────────────────────
+    # b. Filter Jarak 
     hasil = hasil[hasil["Jarak (km)"] <= jarak_max_km]
-
-    # ── c. Filter Ukuran Kamar ────────────────────────────────────────────
+    # c. Filter Ukuran Kamar 
     if ukuran_min > 0:  # 0 berarti "Semua Ukuran" → tidak filter
         hasil = hasil[hasil["Ukuran Kamar (M2)"] >= ukuran_min]
-
-    # ── d. Filter Jenis Kos ───────────────────────────────────────────────
+    # d. Filter Jenis Kos 
     if jenis in ("Putra", "Putri", "Campur"):
-        # Kos 'Campur' bisa ditempati semua jenis, jadi ikut ditampilkan
-        hasil = hasil[hasil["Jenis"].isin([jenis, "Semua"])]
-    # Jika user pilih 'Campur' → tidak ada filter jenis (tampilkan semua)
-
-    # ── e. Filter Fasilitas ───────────────────────────────────────────────
-    # Setiap kolom fasilitas yang dipilih user harus bernilai 1
+        hasil = hasil[hasil["Jenis"] == jenis]
+    # e. Filter Fasilitas 
     for col in fac_cols:
         hasil = hasil[hasil[col] == 1]
 
@@ -180,35 +146,20 @@ def _relaxed_filter(
     ukuran_min  : float,
     jenis       : str,
 ) -> pd.DataFrame:
-    """
-    Relaxed Filtering — dijalankan OTOMATIS jika Strict Filtering menghasilkan 0 baris.
-
-    Toleransi yang diterapkan (sesuai proposal skripsi):
-      - Budget    : dinaikkan 20%   → budget * 1.20
-      - Jarak     : ditambah 1.5 km → jarak_max_km + 1.5
-      - Fasilitas : minimal 75% fasilitas yang dipilih user harus ada
-                    (tidak harus semua 100%)
-    Kriteria Ukuran Kamar dan Jenis tetap sama seperti Strict.
-    """
     hasil = df.copy()
-
-    # ── Budget +20% ───────────────────────────────────────────────────────
+    # Budget +20% 
     budget_relax = budget * 1.20
     hasil = hasil[hasil["Harga (Bulan)"] <= budget_relax]
-
-    # ── Jarak +1.5 km ─────────────────────────────────────────────────────
-    jarak_relax = jarak_max_km + 1.5
+    # Jarak +0.5 km 
+    jarak_relax = jarak_max_km + 0.15
     hasil = hasil[hasil["Jarak (km)"] <= jarak_relax]
-
-    # ── Ukuran tetap (tidak dilonggarkan) ─────────────────────────────────
+    # Ukuran tetap (tidak dilonggarkan) 
     if ukuran_min > 0:
         hasil = hasil[hasil["Ukuran Kamar (M2)"] >= ukuran_min]
-
-    # ── Jenis tetap (tidak dilonggarkan) ──────────────────────────────────
+    # Jenis tetap (tidak dilonggarkan) 
     if jenis in ("Putra", "Putri", "Campur"):
-        hasil = hasil[hasil["Jenis"].isin([jenis, "Semua"])]
-
-    # ── Fasilitas: minimal 75% cocok ──────────────────────────────────────
+        hasil = hasil[hasil["Jenis"] == jenis]
+    # Fasilitas: minimal 75% cocok 
     if fac_cols:
         # Hitung jumlah fasilitas yang dimiliki setiap kos dari daftar pilihan user
         hasil["_fac_match_count"] = hasil[fac_cols].sum(axis=1)
@@ -225,57 +176,26 @@ def _relaxed_filter(
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _kmeans_clustering(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Mengelompokkan kos ke dalam 3 cluster menggunakan K-Means dari scikit-learn.
 
-    Atribut yang digunakan untuk clustering (sesuai proposal):
-      - Harga (Bulan)      → cost attribute
-      - Jarak (km)         → cost attribute
-      - Total Fasilitas    → benefit attribute
-      - Ukuran Kamar (M2)  → benefit attribute
-
-    Langkah-langkah:
-      1. Ekstrak 4 atribut di atas ke matriks fitur X.
-      2. Normalisasi Min-Max agar setiap atribut punya skala [0, 1].
-         Tanpa normalisasi, Harga (ratusan ribu) akan mendominasi
-         perhitungan jarak Euclidean dan mengaburkan atribut lain.
-      3. Jalankan KMeans(k=3).
-      4. Tentukan label cluster berdasarkan rata-rata harga tiap cluster:
-         - Cluster dengan rata-rata harga TERENDAH  → 'Ekonomis'
-         - Cluster dengan rata-rata harga MENENGAH  → 'Standar'
-         - Cluster dengan rata-rata harga TERTINGGI → 'Premium'
-
-    Mengembalikan df dengan kolom tambahan:
-      - 'cluster'       : 'Ekonomis' | 'Standar' | 'Premium'
-      - 'cluster_badge' : class CSS untuk badge warna di UI
-    """
-    # ── 1. Pilih 4 atribut sebagai fitur K-Means ──────────────────────────
+    # 1. Pilih 4 atribut sebagai fitur K-Means
     fitur_kmeans = ["Harga (Bulan)", "Jarak (km)", "Total Fasilitas", "Ukuran Kamar (M2)"]
-    X = df[fitur_kmeans].values   # konversi ke numpy array (shape: n_kos × 4)
+    X = df[fitur_kmeans].values   # konversi ke numpy array 
 
-    # ── 2. Normalisasi Min-Max ────────────────────────────────────────────
-    # MinMaxScaler: X_norm = (X - X_min) / (X_max - X_min)
-    # Hasil: setiap kolom berada di rentang [0.0, 1.0]
-    scaler   = MinMaxScaler()
+    # 2. Normalisasi Min-Max 
+    scaler   = MinMaxScaler() # X_norm = (X - X_min) / (X_max - X_min)
     X_normal = scaler.fit_transform(X)
-
-    # ── 3. Jalankan K-Means ───────────────────────────────────────────────
-    # n_clusters=3  : jumlah cluster yang diinginkan (Ekonomis/Standar/Premium)
-    # max_iter=300   : iterasi maksimal sebelum konvergensi dianggap gagal
-    # n_init=10      : dijalankan 10 kali dengan centroid awal berbeda,
-    #                  diambil hasil terbaik (inertia terkecil)
-    # random_state=42: seed agar hasil reproducible di setiap run
+    
+    # 3. Jalankan K-Means 
     kmeans = KMeans(
-        n_clusters   = 3,
-        max_iter     = 300,
-        n_init       = 10,
-        random_state = 42,
+        n_clusters   = 3, # jumlah cluster yang diinginkan (Ekonomis/Standar/Premium)
+        max_iter     = 300, # iterasi maksimal sebelum konvergensi dianggap gagal
+        n_init       = 10, # dijalankan 10 kali dengan centroid awal berbeda, diambil hasil terbaik (inertia terkecil)
+        random_state = 42, # seed agar hasil reproducible di setiap run
     )
     df = df.copy()
     df["_cluster_id"] = kmeans.fit_predict(X_normal)  # angka: 0, 1, atau 2
 
-    # ── 4. Tentukan label cluster berdasarkan rata-rata harga ─────────────
-    # Hitung rata-rata harga asli (sebelum normalisasi) per cluster_id
+    # 4. Tentukan label cluster berdasarkan rata-rata harga 
     rata_harga = (
         df.groupby("_cluster_id")["Harga (Bulan)"]
         .mean()
@@ -303,60 +223,22 @@ def _kmeans_clustering(df: pd.DataFrame) -> pd.DataFrame:
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _moora_ranking(df: pd.DataFrame, jenis_user: str) -> pd.DataFrame:
-    """
-    Menghitung skor MOORA untuk setiap kos dan mengurutkan hasilnya.
 
-    MOORA (Multi-Objective Optimization on the basis of Ratio Analysis)
-    menggunakan 5 kriteria dengan bobot dan tipe berikut:
-
-    ┌─────────────────────┬────────┬─────────┬──────────────────────────────┐
-    │ Kriteria            │ Bobot  │ Tipe    │ Kolom CSV                    │
-    ├─────────────────────┼────────┼─────────┼──────────────────────────────┤
-    │ Harga Sewa          │ 0.25   │ Cost    │ Harga (Bulan)                │
-    │ Jarak Tempuh        │ 0.25   │ Cost    │ Jarak (km)                   │
-    │ Total Fasilitas     │ 0.25   │ Benefit │ Total Fasilitas              │
-    │ Ukuran Kamar        │ 0.15   │ Benefit │ Ukuran Kamar (M2)            │
-    │ Jenis Kos           │ 0.10   │ Benefit │ Jenis (dikodekan numerik)    │
-    └─────────────────────┴────────┴─────────┴──────────────────────────────┘
-
-    Langkah Perhitungan:
-      1. Buat matriks keputusan X (n_kos × 5_kriteria)
-      2. Normalisasi Vektor: x_ij* = x_ij / √(Σ x_ij²)
-         (membagi setiap elemen dengan akar kuadrat jumlah kuadrat kolom)
-      3. Matriks Terbobot: v_ij = w_j × x_ij*
-      4. Nilai Akhir MOORA:
-         Y_i = Σ(v_ij untuk Benefit) − Σ(v_ij untuk Cost)
-         Semakin tinggi Y_i, semakin direkomendasikan kos tersebut.
-
-    Parameter:
-      jenis_user : jenis kos yang dipilih user di form UI
-                   Dipakai untuk mengodekan kolom 'Jenis' menjadi skor numerik.
-    """
     df = df.copy()
-
-    # ── 3.1 Kodekan 'Jenis' menjadi skor numerik ─────────────────────────
-    # Logika: kos yang sesuai preferensi user → skor tinggi (1.0)
-    #         kos 'Campur' selalu bisa diterima → skor sedang (0.8)
-    #         kos yang tidak sesuai sama sekali → skor rendah (0.3)
+    # 1. Konversi 'Jenis' menjadi skor numerik
     def skor_jenis(jenis_kos: str) -> float:
-        if jenis_user == "Campur":
-            # User tidak memilih jenis spesifik → semua jenis sama baiknya
+        if jenis_user == "Campur": # User tidak memilih jenis spesifik → semua jenis sama baiknya
             return 1.0
-        elif jenis_kos == jenis_user:
-            # Tepat sesuai pilihan user
+        elif jenis_kos == jenis_user: # kos yang sesuai preferensi user
             return 1.0
-        elif jenis_kos == "Campur":
-            # Kos campur bisa diterima semua jenis user
+        elif jenis_kos == "Campur": # kos 'Campur' selalu bisa diterima
             return 0.8
         else:
-            # Tidak sesuai (misal user Putra dapat kos Putri)
-            # Ini seharusnya sudah difilter, tapi sebagai safety net
-            return 0.3
+            return 0.3 # kos yang tidak sesuai sama sekali
 
     df["_skor_jenis"] = df["Jenis"].apply(skor_jenis)
 
-    # ── 3.2 Buat matriks keputusan X ─────────────────────────────────────
-    # Kolom sesuai urutan: [Harga, Jarak, Total Fasilitas, Ukuran M2, Jenis]
+    # 2. Buat matriks keputusan X 
     kolom_moora = [
         "Harga (Bulan)",       # Cost
         "Jarak (km)",          # Cost
@@ -366,22 +248,17 @@ def _moora_ranking(df: pd.DataFrame, jenis_user: str) -> pd.DataFrame:
     ]
     X = df[kolom_moora].values.astype(float)  # shape: (n_kos, 5)
 
-    # ── 3.3 Normalisasi Vektor ────────────────────────────────────────────
-    # Untuk setiap kriteria j:
-    #   norm_j = √(Σ_i x_ij²)     ← akar kuadrat jumlah kuadrat seluruh baris
-    #   x_ij*  = x_ij / norm_j    ← nilai ternormalisasi
-    # Hasil: setiap kolom memiliki vektor satuan (unit vector)
-    norm       = np.sqrt(np.sum(X ** 2, axis=0))   # shape: (5,)
-    # Hindari pembagian dengan nol jika seluruh kolom bernilai 0
-    norm       = np.where(norm == 0, 1e-9, norm)
-    X_norm     = X / norm                           # broadcasting: (n,5) / (5,)
+    # 3. Normalisasi Vektor 
+    norm       = np.sqrt(np.sum(X ** 2, axis=0))   # Menghitung penyebut: Akar kuadrat dari total/jumlah kuadrat (X^2) pada setiap kolom kriteria
+    norm       = np.where(norm == 0, 1e-9, norm)   # Jika ada penyebut bernilai 0, diganti dengan angka sangat kecil (0.000000001)
+    X_norm     = X / norm                          # Membagi matriks asli (X) dengan penyebut (norm) untuk mendapatkan Matriks Ternormalisasi
 
-    # ── 3.4 Matriks Terbobot ──────────────────────────────────────────────
+    # 4. Matriks Terbobot
     # w = [w_harga, w_jarak, w_fasilitas, w_ukuran, w_jenis]
     bobot = np.array([0.25, 0.25, 0.25, 0.15, 0.10])   # total = 1.00
-    V     = X_norm * bobot   # shape: (n_kos, 5)
+    V     = X_norm * bobot   
 
-    # ── 3.5 Hitung Nilai Akhir Y ──────────────────────────────────────────
+    # 5. Hitung Nilai Akhir Y
     # Indeks kolom:  0=Harga(Cost), 1=Jarak(Cost), 2=Fasilitas(Benefit),
     #                3=Ukuran(Benefit), 4=Jenis(Benefit)
     idx_cost    = [0, 1]        # kolom yang bersifat Cost (diminimalkan)
@@ -391,10 +268,9 @@ def _moora_ranking(df: pd.DataFrame, jenis_user: str) -> pd.DataFrame:
     total_cost    = V[:, idx_cost   ].sum(axis=1)  # Σ cost    per kos
 
     # Nilai MOORA akhir: Y = Benefit - Cost
-    Y = total_benefit - total_cost   # shape: (n_kos,)
+    Y = total_benefit - total_cost   
 
     # Normalisasi Y ke rentang [0, 1] untuk kemudahan tampilan
-    # (opsional tapi membantu interpretasi skor di UI)
     Y_min, Y_max = Y.min(), Y.max()
     if Y_max > Y_min:
         Y_norm = (Y - Y_min) / (Y_max - Y_min)
@@ -408,7 +284,7 @@ def _moora_ranking(df: pd.DataFrame, jenis_user: str) -> pd.DataFrame:
     # Hapus kolom bantu sementara
     df = df.drop(columns=["_skor_jenis"])
 
-    # ── 3.6 Urutkan dari skor MOORA tertinggi ke terendah ─────────────────
+    # 6. Urutkan dari skor MOORA tertinggi ke terendah
     df = df.sort_values("skor_moora", ascending=False).reset_index(drop=True)
 
     return df
@@ -426,64 +302,41 @@ def _hitung_kesesuaian(
     ukuran_min  : float,
     jenis       : str,
 ) -> int:
-    """
-    Menghitung persentase kesesuaian (0–100%) antara satu kos dan kriteria user.
 
-    Komponen & bobot:
-      - Fasilitas cocok     : 50% → (jumlah_cocok / total_diminta) × 50
-      - Budget sesuai       : 20% → penuh jika ≤ budget, sebagian jika ≤ +20%
-      - Jarak sesuai        : 20% → penuh jika ≤ jarak_max, sebagian jika ≤ +1.5km
-      - Jenis sesuai        :  5% → penuh jika exact match
-      - Ukuran sesuai       :  5% → penuh jika ≥ ukuran_min
-
-    Mengembalikan bilangan bulat 0–100.
-    """
     skor = 0.0
+    total_kriteria = 5.0 
 
-    # ── Komponen Fasilitas (bobot 50%) ────────────────────────────────────
-    if fac_cols:
-        jumlah_cocok = sum(row[col] == 1 for col in fac_cols)
-        skor += (jumlah_cocok / len(fac_cols)) * 50
-    else:
-        # Jika user tidak memilih fasilitas → komponen ini penuh
-        skor += 50
-
-    # ── Komponen Budget (bobot 20%) ───────────────────────────────────────
-    harga = row["Harga (Bulan)"]
-    if harga <= budget:
-        skor += 20                   # dalam budget → penuh
-    elif harga <= budget * 1.10:
-        skor += 12                   # melebihi ≤10% → sebagian
-    elif harga <= budget * 1.20:
-        skor += 5                    # melebihi ≤20% (batas relaxed) → sedikit
-
-    # ── Komponen Jarak (bobot 20%) ────────────────────────────────────────
-    jarak = row["Jarak (km)"]
-    if jarak <= jarak_max_km:
-        skor += 20                   # dalam jarak → penuh
-    elif jarak <= jarak_max_km + 0.5:
-        skor += 12                   # melebihi ≤0.5km → sebagian
-    elif jarak <= jarak_max_km + 1.5:
-        skor += 5                    # melebihi ≤1.5km (batas relaxed) → sedikit
-
-    # ── Komponen Jenis (bobot 5%) ─────────────────────────────────────────
-    if jenis == "Campur" or row["Jenis"] == jenis:
-        skor += 5
-    elif row["Jenis"] == "Campur":
-        skor += 3                    # kos campur bisa diterima → sebagian
-
-    # ── Komponen Ukuran (bobot 5%) ────────────────────────────────────────
+    # 1. Kriteria Harga (Diberi poin penuh 1.0 jika harga kos <= batas budget user)
+    if row["Harga (Bulan)"] <= budget:
+        skor += 1.0
+        
+    # 2. Kriteria Jarak (Diberi poin penuh 1.0 jika jarak kos <= batas jarak user)
+    if row["Jarak (km)"] <= jarak_max_km:
+        skor += 1.0
+        
+    # 3. Kriteria Ukuran (Diberi poin penuh 1.0 jika user tidak milih, atau ukuran asli kos >= pilihan user)
     if ukuran_min == 0 or row["Ukuran Kamar (M2)"] >= ukuran_min:
-        skor += 5
+        skor += 1.0
+        
+    # 4. Kriteria Jenis (Diberi poin penuh 1.0 HANYA jika gender kos cocok 100% dengan user)
+    if row["Jenis"] == jenis:
+        skor += 1.0                  
+        
+    # 5. Kriteria Fasilitas (Dihitung proporsional. Contoh: minta 4 fasilitas, ada 3, maka dapat 3/4 = 0.75 poin)
+    if fac_cols:
+        fasilitas_cocok = sum(1 for col in fac_cols if row[col] == 1)
+        skor += (fasilitas_cocok / len(fac_cols))
+    else:
+        skor += 1.0  # Otomatis dapat poin 1.0 jika user tidak mensyaratkan fasilitas apa-apa
+    
+    # Hitung persentase akhir: (Total poin yang didapat / 5 kriteria) dikali 100%
+    persentase = (skor / total_kriteria) * 100
 
-    return min(int(round(skor)), 100)   # pastikan tidak melebihi 100
+    return round(persentase, 2)
 
 
 def _buat_deskripsi(row: pd.Series) -> str:
-    """
-    Membuat teks deskripsi otomatis dari atribut kos.
-    Dipakai karena tidak semua baris memiliki kolom 'Catatan'.
-    """
+
     # Gunakan Catatan asli jika tersedia
     if pd.notna(row.get("Catatan", None)) and str(row["Catatan"]).strip():
         tambahan = f" {str(row['Catatan']).strip()}."
@@ -507,7 +360,6 @@ def _buat_deskripsi(row: pd.Series) -> str:
         f"({row['Ukuran Kamar (M2)']:.1f} m²).{tambahan}"
     )
 
-
 def _format_ke_list_dict(
     df          : pd.DataFrame,
     budget      : int,
@@ -517,12 +369,7 @@ def _format_ke_list_dict(
     jenis       : str,
     top_n       : int = 10,
 ) -> list[dict]:
-    """
-    Mengkonversi DataFrame hasil akhir menjadi list[dict] yang siap dirender
-    oleh komponen card UI di pages/results.py dan pages/detail.py.
 
-    Mengambil maksimal `top_n` baris teratas (sudah diurutkan by skor_moora).
-    """
     hasil = []
 
     for i, (_, row) in enumerate(df.head(top_n).iterrows()):
@@ -553,39 +400,39 @@ def _format_ke_list_dict(
             row, budget, jarak_max_km, fac_cols, ukuran_min, jenis
         )
 
-        # Susun dict sesuai format yang diharapkan UI (lihat utils/dummy_data.py)
+        # Susun dict sesuai format yang diharapkan UI 
         kos_dict = {
-            # ── Identitas ────────────────────────────────────────────
+            # Identitas
             "id"            : int(row["No"]),
             "nama"          : str(row["Nama Kos"]),
             "alamat"        : str(row["Alamat"]),
             "daerah"        : str(row["Daerah"]),
 
-            # ── Atribut Utama ─────────────────────────────────────────
+            # Atribut Utama
             "harga"         : int(row["Harga (Bulan)"]),
             "jarak_km"      : float(row["Jarak (km)"]),
             "jenis"         : str(row["Jenis"]),
             "ukuran"        : f"{row['UK 1']:.1f}×{row['UK 2']:.1f} m",
 
-            # ── Hasil K-Means ─────────────────────────────────────────
+            # Hasil K-Means 
             "cluster"       : str(row["cluster"]),
             "cluster_badge" : str(row["cluster_badge"]),
 
-            # ── Hasil MOORA ───────────────────────────────────────────
+            # Hasil MOORA 
             "skor_moora"    : round(float(row["skor_moora"]), 3),
             "kesesuaian_pct": kesesuaian,
 
-            # ── Fasilitas ─────────────────────────────────────────────
+            # Fasilitas 
             "fasilitas"     : fasilitas_tampil,
 
-            # ── Teks & Media ──────────────────────────────────────────
+            # Teks & Media 
             "deskripsi"     : _buat_deskripsi(row),
             "no_wa"         : no_wa,
             "foto_thumb"    : foto_url,
             "foto_list"     : foto_list,
             "foto_tersedia" : str(row.get("Foto Kos", "T")).strip().upper(),
 
-            # ── Info Tambahan (untuk halaman detail) ──────────────────
+            # Info Tambahan (untuk halaman detail) 
             "pemilik"       : f"Pemilik {row['Nama Kos']}",
             "sumber_data"   : str(row["Sumber Data"]),
             "total_fasilitas": int(row["Total Fasilitas"]),
@@ -608,29 +455,11 @@ def cari_rekomendasi(
     jenis           : str,
     top_n           : int = 10,
 ) -> tuple[list[dict], str]:
-    """
-    Fungsi utama yang dipanggil oleh pages/search.py.
-    Menjalankan seluruh pipeline:
-      Baca CSV → Filtering → K-Means → MOORA → Format Output
 
-    Parameter:
-      budget            : harga maksimal (Rp) dari slider UI
-      jarak_meter       : jarak maksimal (meter) dari slider UI
-      fasilitas_dipilih : list nama fasilitas dari multiselect UI
-      ukuran_str        : string pilihan dropdown ukuran kamar
-      jenis             : 'Putra' | 'Putri' | 'Campur'
-      top_n             : maksimal jumlah kos yang dikembalikan (default 10)
-
-    Mengembalikan:
-      (list[dict], mode_filter)
-      - list[dict]   : data kos yang sudah diurutkan by skor MOORA
-      - mode_filter  : 'strict' atau 'relaxed' (untuk info di UI)
-    """
-
-    # ── 0. Load & pra-pemrosesan dataset ─────────────────────────────────
+    # Load & pra-pemrosesan dataset 
     df = _load_dataset()
 
-    # ── Konversi satuan dari UI ke satuan CSV ─────────────────────────────
+    # Konversi satuan dari UI ke satuan CSV 
     # Form slider menggunakan METER, CSV menggunakan KM
     jarak_max_km = jarak_meter / 1000.0
 
@@ -645,7 +474,7 @@ def cari_rekomendasi(
         if f in FASILITAS_UI_KE_CSV and FASILITAS_UI_KE_CSV[f] is not None
     ]
 
-    # ── 1. Filtering ──────────────────────────────────────────────────────
+    # 1. Filtering 
     df_hasil = _strict_filter(df, budget, jarak_max_km, fac_cols, ukuran_min, jenis)
     mode_filter = "strict"
 
@@ -658,7 +487,7 @@ def cari_rekomendasi(
     if df_hasil.empty:
         return [], mode_filter
 
-    # ── 2. K-Means Clustering ─────────────────────────────────────────────
+    # 2. K-Means Clustering 
     # K-Means membutuhkan minimal 3 baris (karena k=3)
     # Jika data kurang dari 3, jalankan dengan k yang disesuaikan
     if len(df_hasil) < 3:
@@ -669,10 +498,10 @@ def cari_rekomendasi(
     else:
         df_hasil = _kmeans_clustering(df_hasil)
 
-    # ── 3. MOORA Ranking ──────────────────────────────────────────────────
+    # 3. MOORA Ranking 
     df_hasil = _moora_ranking(df_hasil, jenis)
 
-    # ── 4. Format ke list[dict] ───────────────────────────────────────────
+    # 4. Format ke list[dict] 
     hasil_list = _format_ke_list_dict(
         df_hasil, budget, jarak_max_km, fac_cols, ukuran_min, jenis, top_n
     )
